@@ -1,0 +1,31 @@
+[package]
+name = "pulp"
+version = "0.1.0"
+authors = ["Dominus Carnufex"]
+
+[dependencies]
+
+[lib]
+test = true
+crate-type = ["dylib"]
+
+[features]
+v0_x = ["v0_1_x"]
+v0_1_x = ["v0_1_0"]
+v0_1_0 = []
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 1
+
+[profile.test]
+opt-level = 0
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 1
