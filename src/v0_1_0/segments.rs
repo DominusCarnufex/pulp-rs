@@ -29,7 +29,7 @@ pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
                         offset + 8 + HEADER_LENGTH
                     ),
             _    => Err(format!("Segment invalide à l’offset 0x{:x} : \
-                    type inconnu.", offset + HEADER_LENGTH))
+                    type de segment inconnu.", offset + HEADER_LENGTH))
         };
 
         match segment   {
@@ -156,7 +156,7 @@ fn code_segment(bytecode : &[u8], overhead : usize)
                     ),
             _    => return Err(
                         format!("Constante invalide à l’offset 0x{:x} : \
-                            type inconnu.", offset + overhead)
+                            type de constante inconnu.", offset + overhead)
                     )
         };
 
@@ -174,7 +174,7 @@ fn code_segment(bytecode : &[u8], overhead : usize)
     }
     base += const_table_size;
 
-    /***** OPCODE LIST *****/
+    /***** LISTE D’OPCODES *****/
     let opcode_list_size =
         u8x2_to_u16(&bytecode[offset .. offset + 2]) as usize;
 

@@ -51,7 +51,7 @@ fn bad_segment_size()   {
 
 // Le type de segment 0x00 n’est pas défini.
 #[test]
-#[should_panic(expected = "type inconnu")]
+#[should_panic(expected = "type de segment inconnu")]
 fn bad_segment_type()   {
     let vec = vec![
         0x14, 0x00, 0x00, 0x00,
@@ -141,7 +141,6 @@ fn code_segment_symbols()   {
     };
 
     assert_eq!(expected, seg);
-    
 }
 
 // La taille prétendue de la table des symboles (20
@@ -233,6 +232,116 @@ fn code_segment_symbol_table_wrong_size()   {
         0x01, 0x00, 0x00, 0x00,
         0x05, 0x00, 0x00, 0x00,
         0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+    /***** TABLE DES CONSTANTES *****/
+
+// Table de constantes contenant deux constantes : 42 et
+// -871, pour tester la reconnaissance des nombres négatifs.
+#[test]
+fn code_segment_constants() {
+    let vec = vec![
+        0x26, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x16, 0x00, 0x02, 0x00,
+           0x01, 0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+           0x01, 0x99, 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0x04, 0x00, 0x00, 0x00
+    ];
+
+    let seg = match segments(&vec)  {
+        Ok(mut a)  => a.pop().unwrap(),
+        Err(e)     => panic!("{}", e)
+    };
+
+    let expected = Segment::Code    {
+            symbol_table : Vec::new(),
+            const_table  : vec![
+                            Const::Int(42),
+                            Const::Int(-871)
+                           ],
+            code         : Vec::new()
+    };
+
+    assert_eq!(expected, seg);
+}
+
+// La taille prétendue de la table des constantes (20
+// octets) va au-delà de la fin du segment.
+#[test]
+#[should_panic(expected = "TC trop petite")]
+fn code_segment_constant_table_too_short_1()    {
+    let vec = vec![
+        0x14, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x14, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// La taille prétendue de la table des constantes est de 3
+// octets, alors qu’une table des constantes fait au moins
+// 4 octets.
+#[test]
+#[should_panic(expected = "TC trop petite")]
+fn code_segment_constant_table_too_short_2()    {
+    let vec = vec![
+        0x14, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x03, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// Le type de constante 0x00 n’est pas défini.
+#[test]
+#[should_panic(expected = "type de constante inconnu")]
+fn code_segment_constant_bad_type() {
+    let vec = vec![
+        0x15, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x00,
+           0x00,
+        0x04, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// La taille prétendue de la table des constantes est de 5
+// octets, alors qu’elle en fait 4.
+#[test]
+#[should_panic(expected = "taille fournie incohérente avec la TC")]
+fn code_segment_constant_table_wrong_size() {
+    let vec = vec![
+        0x14, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x05, 0x00, 0x00, 0x00,
         0x04, 0x00, 0x00, 0x00
     ];
 
