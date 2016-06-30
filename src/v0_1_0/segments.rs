@@ -26,7 +26,7 @@ pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
         let segment = match stype   {
             0x01 => code_segment(
                         &bytecode[offset + 8 .. offset + size],
-                        offset
+                        offset + 8 + HEADER_LENGTH
                     ),
             _    => Err(format!("Segment invalide à l’offset 0x{:x} : \
                     type inconnu.", offset + HEADER_LENGTH))
@@ -86,14 +86,15 @@ fn code_segment(bytecode : &[u8], overhead : usize)
     }
 
     let mut offset = 0;
+    let mut base   = 0;
 
-    /***** SYMBOL TABLE *****/
+    /***** TABLE DES SYMBOLES *****/
     let symbol_table_size =
         u8x2_to_u16(&bytecode[offset .. offset + 2]) as usize;
 
     if bytecode.len() < offset + symbol_table_size || symbol_table_size < 4 {
         return Err(format!("Table des symboles invalide à l’offset 0x{:x} : \
-                    trop petite pour être valide.", offset + overhead));
+                    TS trop petite pour être valide.", offset + overhead));
     }
 
     let symbol_count =
@@ -102,8 +103,15 @@ fn code_segment(bytecode : &[u8], overhead : usize)
 
     let mut symbols  = Vec::with_capacity(symbol_count);
     for _i in 0..symbol_count   {
-        let     size = bytecode[offset] as usize;
-        let mut vec  = Vec::with_capacity(size);
+        let size = bytecode[offset] as usize;
+
+        if size == 0    {
+            return Err(format!("Symbole invalide à l’offset 0x{:x} : la \
+                        taille doit être au moins de 1.", offset + overhead)
+                      )
+        }
+
+        let mut vec = Vec::with_capacity(size);
         for u in &bytecode[offset + 1 .. offset + size + 1] {
             vec.push(*u);
         }
@@ -121,13 +129,19 @@ fn code_segment(bytecode : &[u8], overhead : usize)
         offset += size + 1;
     } // End of loop.
 
-    /***** CONSTANT TABLE *****/
+    if base + symbol_table_size != offset   {
+        return Err(format!("Table des symboles invalide à l’offset 0x{:x} : \
+                    taille fournie incohérente avec la TS.", base + overhead));
+    }
+    base += symbol_table_size;
+
+    /***** TABLE DES CONSTANTES *****/
     let const_table_size =
         u8x2_to_u16(&bytecode[offset .. offset + 2]) as usize;
 
     if bytecode.len() < offset + const_table_size || const_table_size < 4   {
         return Err(format!("Table des constantes invalide à l’offset 0x{:x} : \
-                    trop petite pour être valide.", offset + overhead));
+                    TC trop petite pour être valide.", offset + overhead));
     }
 
     let const_count =
@@ -154,13 +168,19 @@ fn code_segment(bytecode : &[u8], overhead : usize)
         };
     } // End of loop.
 
+    if base + const_table_size != offset    {
+        return Err(format!("Table des constantes invalide à l’offset 0x{:x} : \
+                    taille fournie incohérente avec la TC.", base + overhead));
+    }
+    base += const_table_size;
+
     /***** OPCODE LIST *****/
     let opcode_list_size =
         u8x2_to_u16(&bytecode[offset .. offset + 2]) as usize;
 
     if bytecode.len() < offset + opcode_list_size || opcode_list_size < 4   {
         return Err(format!("Section de code invalide à l’offset 0x{:x} : \
-                    trop petite pour être valide.", offset + overhead));
+                    SC trop petite pour être valide.", offset + overhead));
     }
 
     let opcode_count =
@@ -226,6 +246,16 @@ fn code_segment(bytecode : &[u8], overhead : usize)
         opcodes.push(opcode);
         offset += 1;
     } // End of loop.
+
+    if base + opcode_list_size != offset    {
+        return Err(format!("Section de code invalide à l’offset 0x{:x} : \
+                    taille fournie incohérente avec la SC.", base + overhead));
+    }
+
+    if base + opcode_list_size != bytecode.len()    {
+        return Err(format!("Segment invalide à l’offset 0x{:x} : \
+                    taille fournie incohérente avec le segment.", overhead));
+    }
 
     Ok(Segment::Code    {
         symbol_table : symbols,
