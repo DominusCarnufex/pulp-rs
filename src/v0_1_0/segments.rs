@@ -239,7 +239,7 @@ fn code_segment(bytecode : &[u8], overhead : usize)
             0x40 => Opcode::UMinus,
             _    => return Err(
                         format!("Opcode invalide à l’offset 0x{:x} : \
-                            type inconnu.", offset + overhead)
+                            type d’opcode inconnu.", offset + overhead)
                     )
         }; // End of match.
 

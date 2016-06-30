@@ -350,3 +350,158 @@ fn code_segment_constant_table_wrong_size() {
         Err(e) => panic!("{}", e)
     }
 }
+
+    /***** LISTE D’OPCODES *****/
+
+// Test unique pour tous les opcodes existants.
+#[test]
+fn code_segment_opcodes()   {
+    let vec = vec![
+        0x33, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x23, 0x00, 0x17, 0x00,
+           0x00,
+           0x01,
+           0x02,
+           0x03,
+           0x04,
+           0x0a, 0x01, 0x00,
+           0x20,
+           0x21,
+           0x25, 0x01, 0x00,
+           0x27, 0x01, 0x00,
+           0x29, 0x01, 0x00,
+           0x30,
+           0x31,
+           0x32,
+           0x33,
+           0x34,
+           0x35,
+           0x36,
+           0x37,
+           0x38,
+           0x39,
+           0x3a,
+           0x40
+    ];
+
+    let seg = match segments(&vec)  {
+        Ok(mut a)  => a.pop().unwrap(),
+        Err(e)     => panic!("{}", e)
+    };
+
+    let vec = vec![
+        Opcode::NOp,
+        Opcode::Pop,
+        Opcode::Rot2,
+        Opcode::Rot3,
+        Opcode::DupTop,
+        Opcode::Push(1),
+        Opcode::PushNewEnv,
+        Opcode::PopEnv,
+        Opcode::Let(1),
+        Opcode::Store(1),
+        Opcode::Load(1),
+        Opcode::Add,
+        Opcode::Sub,
+        Opcode::Mul,
+        Opcode::Div,
+        Opcode::Pow,
+        Opcode::Mod,
+        Opcode::BitOr,
+        Opcode::BitAnd,
+        Opcode::BitXor,
+        Opcode::LShift,
+        Opcode::RShift,
+        Opcode::UMinus
+    ];
+
+    let expected = Segment::Code    {
+            symbol_table : Vec::new(),
+            const_table  : Vec::new(),
+            code         : vec
+    };
+
+    assert_eq!(expected, seg);
+}
+
+// La taille prétendue de la section de code (20
+// octets) va au-delà de la fin du segment.
+#[test]
+#[should_panic(expected = "SC trop petite")]
+fn code_segment_opcode_list_too_short_1()   {
+    let vec = vec![
+        0x14, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x14, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// La taille prétendue de la section de code est de 3
+// octets, alors qu’une section de code fait au moins
+// 4 octets.
+#[test]
+#[should_panic(expected = "SC trop petite")]
+fn code_segment_opcode_list_too_short_2()   {
+    let vec = vec![
+        0x14, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x03, 0x00, 0x00, 0x00
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// L’opcode 0xff n’est pas défini.
+#[test]
+#[should_panic(expected = "type d’opcode inconnu")]
+fn code_segment_bad_opcode()    {
+    let vec = vec![
+        0x15, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x05, 0x00, 0x10, 0x00,
+           0xff
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
+
+// La taille prétendue de la section de code est de 5
+// octets, alors qu’elle en fait 4.
+#[test]
+#[should_panic(expected = "taille fournie incohérente avec la SC")]
+fn code_segment_opcode_list_wrong_size()    {
+    let vec = vec![
+        0x15, 0x00, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x04, 0x00, 0x00, 0x00,
+        0x05, 0x00, 0x00, 0x00,
+        0x00 // <-------------- Nécessaire pour ne pas déclencher une
+             //                 autre erreur avant celle-ci.
+    ];
+
+    match segments(&vec)    {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
+    }
+}
