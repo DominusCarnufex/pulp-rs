@@ -1,10 +1,10 @@
-use std::error::Error; // Nécessaire pour e.description().
 use ::utils::*;
 use ::header::HEADER_LENGTH;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Segment    {
     Code {
+        name         : String,
         symbol_table : Vec<Symbol>,
         const_table  : Vec<Const>,
         code         : Vec<Opcode>
@@ -22,11 +22,34 @@ pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
                     taille incorrecte.", offset + HEADER_LENGTH));
         }
 
+        let name_size = bytecode[offset + 8] as usize;
+
+        if name_size == 0   {
+            return Err(format!("Segment invalide à l’offset 0x{:x} : la \
+                        taille du nom doit être au moins de 1.",
+                        offset + HEADER_LENGTH)
+                      )
+        }
+
+        let mut name_vec = Vec::with_capacity(size);
+        for u in &bytecode[offset + 9 .. offset + name_size + 9]    {
+            name_vec.push(*u);
+        }
+
+        let name = match String::from_utf8(name_vec)    {
+            Ok(a)  => a,
+            Err(_) => return Err(
+                        format!("Segment invalide à l’offset 0x{:x} : \
+                            UTF-8 invalide dans le nom.", offset)
+                      )
+        };
+
         let stype = bytecode[offset + 4];
         let segment = match stype   {
             0x01 => code_segment(
-                        &bytecode[offset + 8 .. offset + size],
-                        offset + 8 + HEADER_LENGTH
+                        &bytecode[offset + name_size + 9 .. offset + size],
+                        offset + name_size + 9 + HEADER_LENGTH,
+                        name
                     ),
             _    => Err(format!("Segment invalide à l’offset 0x{:x} : \
                     type de segment inconnu.", offset + HEADER_LENGTH))
@@ -77,7 +100,7 @@ pub enum Opcode {
     UMinus,
 }
 
-fn code_segment(bytecode : &[u8], overhead : usize)
+fn code_segment(bytecode : &[u8], overhead : usize, name : String)
     -> Result<Segment, String>
 {
     if bytecode.len() < 12   {
@@ -118,10 +141,10 @@ fn code_segment(bytecode : &[u8], overhead : usize)
 
         let symbol = match String::from_utf8(vec)   {
             Ok(a)  => a,
-            Err(e) => return Err(
+            Err(_) => return Err(
                         format!("Symbole invalide à l’offset 0x{:x} : \
-                            UTF-8 invalide ({}).", offset + overhead,
-                            e.description())
+                            UTF-8 invalide dans le symbole.",
+                            offset + overhead)
                       )
         };
 
@@ -258,6 +281,7 @@ fn code_segment(bytecode : &[u8], overhead : usize)
     }
 
     Ok(Segment::Code    {
+        name         : name,
         symbol_table : symbols,
         const_table  : consts,
         code         : opcodes,

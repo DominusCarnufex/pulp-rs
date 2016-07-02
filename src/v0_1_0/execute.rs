@@ -7,6 +7,7 @@ pub type ProgState = (Vec<Const>, Vec<Environment>);
 impl Segment    {
     pub fn execute(&self, state : ProgState) -> Result<ProgState, String>   {
         let Segment::Code {
+            name         : _,
             symbol_table : ref symbols,
             const_table  : ref constants,
             code         : ref opcodes

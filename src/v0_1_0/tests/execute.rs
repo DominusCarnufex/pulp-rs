@@ -4,6 +4,7 @@ use super::super::execute::Environment;
 #[test]
 fn pop()    {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Pop]
@@ -26,6 +27,7 @@ fn pop()    {
 #[should_panic(expected = "dépiler sur une pile vide")]
 fn bad_pop()    {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Pop]
@@ -43,6 +45,7 @@ fn bad_pop()    {
 #[test]
 fn rot2()   {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Rot2]
@@ -65,6 +68,7 @@ fn rot2()   {
 #[should_panic(expected = "Rot2 sur une pile contenant moins")]
 fn bad_rot2()   {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Rot2]
@@ -82,6 +86,7 @@ fn bad_rot2()   {
 #[test]
 fn rot3()   {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Rot3]
@@ -104,6 +109,7 @@ fn rot3()   {
 #[should_panic(expected = "Rot3 sur une pile contenant moins")]
 fn bad_rot3()   {
     let seg = Segment::Code {
+        name         : "main".to_string(),
         symbol_table : Vec::new(),
         const_table  : Vec::new(),
         code         : vec![Opcode::Rot3]
