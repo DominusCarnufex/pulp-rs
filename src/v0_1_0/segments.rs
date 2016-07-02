@@ -14,6 +14,7 @@ pub enum Segment    {
 pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
     let mut vec    = Vec::new();
     let mut offset = 0;
+    let mut names  = Vec::new();
 
     while offset < bytecode.len() - 1   {
         let size  = u8x4_to_u32(&bytecode[offset .. offset + 4]) as usize;
@@ -43,6 +44,16 @@ pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
                             UTF-8 invalide dans le nom.", offset)
                       )
         };
+
+        if names.contains(&name)    {
+            return Err(format!(
+                        "Deux segments portent le même identifiant ({}).",
+                        name)
+                   );
+        }
+
+        names.push(name.clone()); // On a à nouveau besoin de `name` plus
+                                  // bas, donc il faut le cloner.
 
         let stype = bytecode[offset + 4];
         let segment = match stype   {
