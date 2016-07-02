@@ -11,6 +11,21 @@ pub enum Segment    {
     },
 }
 
+// Petite fonction utilitaire pour pouvoir accéder facilement
+// à l’identifiant d’un segment.
+impl Segment    {
+    pub fn name(&self) -> String    {
+        match *self {
+            Segment::Code   {
+                name         : ref n,
+                symbol_table : _,
+                const_table  : _,
+                code         : _
+            } => return n.clone()
+        }
+    }
+}
+
 pub fn segments(bytecode : &[u8]) -> Result<Vec<Segment>, String>   {
     let mut vec    = Vec::new();
     let mut offset = 0;

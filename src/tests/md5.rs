@@ -1,5 +1,6 @@
 use super::super::md5;
 
+// Segment réel de la version 0.1.0 du *bytecode*.
 #[test]
 fn md5()    {
     let vec = vec![
