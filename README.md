@@ -32,11 +32,13 @@ La portion entre crochets doit être répétée autant de fois qu’il y a de ve
 
 ## Exécution
 
-S’agissant d’une bibliothèque, elle n’est pas exécutable directement. Il faudra faire appel à la fonction suivante.
+S’agissant d’une bibliothèque, elle n’est pas exécutable directement. Il faudra faire appel tout d’abord à la fonction suivante.
 
 ```rust
-pub fn run(bytecode : &[u8]) -> Result<(), String>
+pub fn version(bytecode : &[u8]) -> Result<(u8, u8, u8), String>
 ```
+
+Si le *bytecode* fourni en entrée est valide et utilise une version supportée par l’interpréteur tel qu’il est compilé, cette fonction renvoie la version du *bytecode* utilisée sous la forme d’un triplet de `u8`. Pour une version `x.y.z` donnée, il faudra ensuite appeler la fonction `run(bytecode : &[u8])` du module `v<x>_<y>_<z>`. Chacune a sa propre signature de type, car elle ne renvoie pas toujours la même chose.
 
 À l’heure actuelle, il n’existe pas d’interface permettant d’appeler cette fonction depuis un programme en C (ou tout autre langage disposant d’un système de FFI utilisant les conventions d’appel du C), le programme appelant devra nécessairement être en Rust. Cela est amené à changer dans un futur proche.
 

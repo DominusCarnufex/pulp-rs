@@ -1,49 +1,4 @@
-use ::run;
-use ::PulpResult;
-
-// Un programme complet utilisant la version 0.1.0 du
-// *bytecode*. Il réalise l’addition de 1 et 2.
-// Pour l’instant, aucune vérification du résultat n’est
-// faite, l’API de la fonction `run()` ne le permettant pas.
-#[test]
-#[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
-fn run_v0_1_0() {
-    let vec = vec![
-        0x50, 0x55, 0x4c, 0x50,
-        0x00, 0x01, 0x00,
-        0x00,
-        0x57, 0x6e, 0xbc, 0xfa,
-        0x32, 0x00, 0x7b, 0xf9, 0x73, 0xca, 0x8b, 0x5f,
-        0x09, 0xe0, 0x54, 0x09, 0x3a, 0xab, 0xf2, 0x60,
-        0x32, 0x00, 0x00, 0x00,
-        0x01, 0x00, 0x00, 0x00,
-        0x04, 0x6d, 0x61, 0x69, 0x6e,
-        0x04, 0x00, 0x00, 0x00,
-        0x16, 0x00, 0x02, 0x00,
-          0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,    
-        0x0b, 0x00, 0x03, 0x00,
-          0x0a, 0x00, 0x00,
-          0x0a, 0x01, 0x00,
-          0x30
-    ];
-
-    match run(&vec) {
-        PulpResult::Ok(h)      => {
-            let res = match h.vector::<Option<::v0_1_0::Const>>()   {
-                Ok(mut a)  => {
-                    a.pop().unwrap().unwrap()
-                },
-                Err(e)     => panic!("{}", e)
-            };
-
-            assert_eq!(::v0_1_0::Const::Int(3), res);
-        },
-        PulpResult::ProgErr(_) => panic!("Programme avorté qui \
-                                            n’aurait pas dû"),
-        PulpResult::CompErr(e) => panic!("{}", e)
-    }
-}
+use ::version;
 
 // Un programme de seulement 4 octets ne contient pas
 // un en-tête complet, et ne peut donc être valide.
@@ -52,10 +7,9 @@ fn run_v0_1_0() {
 fn too_small()  {
     let vec = vec![0x50, 0x75, 0x4c, 0x50];
 
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
+    match version(&vec) {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
     }
 }
 
@@ -85,10 +39,9 @@ fn bad_md5()    {
           0x30
     ];
 
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
+    match version(&vec) {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
     }
 }
 
@@ -118,10 +71,9 @@ fn good_version_v0_1_0()    {
           0x30
     ];
 
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
+    match version(&vec) {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
     }
 }
 
@@ -129,7 +81,7 @@ fn good_version_v0_1_0()    {
 // *bytecode* n’a pas été activée à la compilation.
 #[test]
 #[cfg(not(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0")))]
-#[should_panic(expected = "Version du bytecode non supporté")]
+#[should_panic(expected = "Version du bytecode non supportée")]
 fn bad_version_v0_1_0() {
     let vec = vec![
         0x50, 0x55, 0x4c, 0x50,
@@ -151,44 +103,9 @@ fn bad_version_v0_1_0() {
           0x30
     ];
 
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
-    }
-}
-
-// Un programme complet utilisant la version 0.1.0 du
-// *bytecode*. Il n’y a cependant pas de segment `main`,
-// donc pas de point d’entrée au programme.
-#[test]
-#[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
-#[should_panic(expected = "aucun segment `main` disponible")]
-fn no_main_v0_1_0() {
-    let vec = vec![
-        0x50, 0x55, 0x4c, 0x50,
-        0x00, 0x01, 0x00,
-        0x00,
-        0x57, 0x6e, 0xbc, 0xfa,
-        0x6b, 0xb1, 0x71, 0xa1, 0x87, 0xd6, 0x98, 0x45,
-        0x1f, 0x88, 0x48, 0x31, 0xef, 0xfd, 0x65, 0x4f,
-        0x2f, 0x00, 0x00, 0x00,
-        0x01, 0x00, 0x00, 0x00,
-        0x01, 0x6d,
-        0x04, 0x00, 0x00, 0x00,
-        0x16, 0x00, 0x02, 0x00,
-          0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,    
-        0x0b, 0x00, 0x03, 0x00,
-          0x0a, 0x00, 0x00,
-          0x0a, 0x01, 0x00,
-          0x30
-    ];
-
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
+    match version(&vec) {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
     }
 }
 
@@ -216,9 +133,8 @@ fn bad_version()    {
           0x30
     ];
 
-    match run(&vec) {
-        PulpResult::Ok(_)      => {},
-        PulpResult::ProgErr(_) => {},
-        PulpResult::CompErr(e) => panic!("{}", e)
+    match version(&vec) {
+        Ok(_)  => {},
+        Err(e) => panic!("{}", e)
     }
 }
