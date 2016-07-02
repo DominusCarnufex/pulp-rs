@@ -441,12 +441,12 @@ fn code_segment_constant_table_wrong_size() {
 #[test]
 fn code_segment_opcodes()   {
     let vec = vec![
-        0x35, 0x00, 0x00, 0x00,
+        0x38, 0x00, 0x00, 0x00,
         0x01, 0x00, 0x00, 0x00,
         0x01, 0x61,
         0x04, 0x00, 0x00, 0x00,
         0x04, 0x00, 0x00, 0x00,
-        0x23, 0x00, 0x17, 0x00,
+        0x26, 0x00, 0x18, 0x00,
            0x00,
            0x01,
            0x02,
@@ -469,7 +469,8 @@ fn code_segment_opcodes()   {
            0x38,
            0x39,
            0x3a,
-           0x40
+           0x40,
+           0x60, 0x00, 0x00
     ];
 
     let seg = match segments(&vec)  {
@@ -500,7 +501,8 @@ fn code_segment_opcodes()   {
         Opcode::BitXor,
         Opcode::LShift,
         Opcode::RShift,
-        Opcode::UMinus
+        Opcode::UMinus,
+        Opcode::Abort(0)
     ];
 
     let expected = Segment::Code    {

@@ -96,6 +96,7 @@ pub type Symbol = String;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Const  {
+    Abort(usize),
     Int(i64),
 }
 
@@ -124,6 +125,7 @@ pub enum Opcode {
     LShift,
     RShift,
     UMinus,
+    Abort(usize),
 }
 
 fn code_segment(bytecode : &[u8], overhead : usize, name : String)
@@ -286,6 +288,13 @@ fn code_segment(bytecode : &[u8], overhead : usize, name : String)
             0x39 => Opcode::LShift,
             0x3a => Opcode::RShift,
             0x40 => Opcode::UMinus,
+            0x60 => {
+                offset += 2;
+                let arg = u8x2_to_u16(
+                    &bytecode[offset - 1 .. offset + 1]
+                ) as usize;
+                Opcode::Abort(arg)
+            },
             _    => return Err(
                         format!("Opcode invalide à l’offset 0x{:x} : \
                             type d’opcode inconnu.", offset + overhead)

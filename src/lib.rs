@@ -66,8 +66,13 @@ pub fn run(bytecode : &[u8]) -> Result<(), String>  {
                 match s.execute((Vec::new(), vec![v0_1_0::Environment::new()])) {
                     Ok((mut stack, _)) => {
                         if stack.len() > 0  {
-                            let v0_1_0::Const::Int(ts) = stack.pop().unwrap();
-                            println!("Sommet de la pile : {}.", ts);
+                            match stack.pop().unwrap()  {
+                                v0_1_0::Const::Int(ts)
+                                    => println!("Sommet de la pile : {}.", ts),
+                                v0_1_0::Const::Abort(_)
+                                    => return Err("Le programme s’est \
+                                        interrompu avant terme.".to_string())
+                            }
                         } else {
                             println!("Pile vide.");
                         }

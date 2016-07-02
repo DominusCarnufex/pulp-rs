@@ -195,8 +195,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 + ts));
                 },
                 Opcode::Sub             => {
@@ -206,8 +220,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 - ts));
                 },
                 Opcode::Mul             => {
@@ -217,8 +245,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 * ts));
                 },
                 Opcode::Div             => {
@@ -228,8 +270,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 / ts));
                 },
                 Opcode::Pow             => {
@@ -239,8 +295,25 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    // La fonction pow() de Rust n’accepte qu’un u32 comme
+                    // exposant. Cela ne correspond donc pas totalement au
+                    // comportement attendu, puisque ce devrait être un i64.
                     stack.push(Const::Int(ts1.pow(ts as u32)));
                 },
                 Opcode::Mod             => {
@@ -250,8 +323,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 % ts));
                 },
                 Opcode::BitOr           => {
@@ -261,8 +348,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 | ts));
                 },
                 Opcode::BitAnd          => {
@@ -272,8 +373,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 & ts));
                 },
                 Opcode::BitXor         => {
@@ -283,8 +398,22 @@ impl Segment    {
                             deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 ^ ts));
                 },
                 Opcode::LShift         => {
@@ -294,8 +423,22 @@ impl Segment    {
                             de deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 << ts));
                 },
                 Opcode::RShift         => {
@@ -305,8 +448,22 @@ impl Segment    {
                             de deux nombres.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
-                    let Const::Int(ts1) = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
+                    let ts1 = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(ts1 >> ts));
                 },
                 Opcode::UMinus         => {
@@ -315,8 +472,19 @@ impl Segment    {
                             de moins unaire sur une pile vide.".to_string());
                     }
 
-                    let Const::Int(ts)  = stack.pop().unwrap();
+                    let ts = match stack.pop().unwrap() {
+                        Const::Int(a) => a,
+                        Const::Abort(err) => {
+                            stack.push(Const::Abort(err));
+                            return Ok((stack, env_stack));
+                        }
+                    };
+
                     stack.push(Const::Int(-ts));
+                },
+                Opcode::Abort(err)     => {
+                    stack.push(Const::Abort(err));
+                    return Ok((stack, env_stack));
                 },
                 //_                       => {},
             } // End of match.
