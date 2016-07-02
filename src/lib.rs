@@ -1,5 +1,7 @@
-#![allow(dead_code)]
-#![feature(stmt_expr_attributes)]
+#![crate_type = "dylib"]
+#![crate_name = "pulp"]
+
+#![feature(alloc, heap_api, stmt_expr_attributes)]
 
 mod utils;
 
@@ -9,27 +11,37 @@ use md5::*;
 mod header;
 use header::*;
 
+mod heapvar;
+use heapvar::*;
+
 #[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
 mod v0_1_0;
 
 #[cfg(test)]
 mod tests;
 
-pub fn run(bytecode : &[u8]) -> Result<(), String>  {
+pub enum PulpResult<A, B, C>  {
+    Ok(A),
+    ProgErr(B),
+    CompErr(C)
+}
+
+pub fn run(bytecode : &[u8]) -> PulpResult<HeapVar, HeapVar, String>    {
     if bytecode.len() < HEADER_LENGTH   {
-        return Err("Le fichier n’est pas un bytecode PULP : \
+        return PulpResult::CompErr("Le fichier n’est pas un bytecode PULP : \
                     taille insuffisante.".to_string());
     }
 
     let header = match header(&bytecode)    {
         Ok(a)  => a,
-        Err(e) => return Err(e)
+        Err(e) => return PulpResult::CompErr(e)
     };
 
     if header.md5 != md5(&bytecode[HEADER_LENGTH..])    {
         let (a0, b0, c0, d0) = header.md5;
         let (a1, b1, c1, d1) = md5(&bytecode[HEADER_LENGTH..]);
-        return Err(format!("Fichier corrompu : condensat MD5 incorrect.\n\
+        return PulpResult::CompErr(format!("Fichier corrompu : \
+                    condensat MD5 incorrect.\n\
                     Trouvé :  0x{:x} 0x{:x} 0x{:x} 0x{:x}.\n\
                     Attendu : 0x{:x} 0x{:x} 0x{:x} 0x{:x}.",
                     a0, b0, c0, d0, a1, b1, c1, d1)
@@ -45,51 +57,60 @@ pub fn run(bytecode : &[u8]) -> Result<(), String>  {
     {
         // Si l’interpréteur a été compilé sans supporter cette version du
         // *bytecode*, inutile d’aller plus loin.
-        if !(cfg!(feature = "v0_x") || cfg!(feature = "v0_1_x") ||
-            cfg!(feature = "v0_1_0"))
-        {
-            return Err(format!("Version du bytecode non supportée ({}.{}.{}). \
+        #[cfg(not(any(feature = "v0_x", feature = "v0_1_x",
+            feature = "v0_1_0")))]
+        return PulpResult::CompErr(
+                format!("Version du bytecode non supportée ({}.{}.{}). \
                         Compiler avec des options différentes pour l’obtenir.",
                         header.vers_maj, header.vers_min, header.vers_patch)
-                   );
-        }
+               );
 
         #[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
         let segments = match v0_1_0::segments(&bytecode[HEADER_LENGTH..])   {
             Ok(a)  => a,
-            Err(e) => return Err(e)
+            Err(e) => return PulpResult::CompErr(e)
         };
 
         #[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
         for s in segments   {
             if s.name() == "main"   {
-                match s.execute((Vec::new(), vec![v0_1_0::Environment::new()])) {
-                    Ok((mut stack, _)) => {
-                        if stack.len() > 0  {
-                            match stack.pop().unwrap()  {
-                                v0_1_0::Const::Int(ts)
-                                    => println!("Sommet de la pile : {}.", ts),
-                                v0_1_0::Const::Abort(_)
-                                    => return Err("Le programme s’est \
-                                        interrompu avant terme.".to_string())
+                match s.execute((Vec::new(),
+                    vec![v0_1_0::Environment::new()]))
+                {
+                    Ok((mut stack, env)) => {
+                        if stack.len() == 0 {
+                            match HeapVar::from(None::<v0_1_0::Const>)  {
+                                Ok(a)  => return PulpResult::Ok(a),
+                                Err(e) => return PulpResult::CompErr(e)
                             }
-                        } else {
-                            println!("Pile vide.");
                         }
 
-                        return Ok(());
-                    },
-                    Err(e)             => return Err(e)
+                        let ts = stack.pop().unwrap();
+
+                        if let v0_1_0::Const::Abort(err) = ts   {
+                            match HeapVar::from((err, stack, env))  {
+                                Ok(a)  => return PulpResult::ProgErr(a),
+                                Err(e) => return PulpResult::CompErr(e)
+                            }
+                        }
+
+                        match HeapVar::from(Some(ts))   {
+                            Ok(a)  => return PulpResult::Ok(a),
+                            Err(e) => return PulpResult::CompErr(e)
+                        }
+                    }, // End of Ok branch.
+                    Err(e) => return PulpResult::CompErr(e)
                 } // End of match.
             } // End of if.
         } // End of loop.
 
         #[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
-        return Err("Exécution impossible : aucun segment \
+        return PulpResult::CompErr("Exécution impossible : aucun segment \
             `main` disponible.".to_string());
     } // End of v0.1.0.
 
-    Err(format!("Version inconnue du bytecode ({}.{}.{}).",
-        header.vers_maj, header.vers_min, header.vers_patch)
+    PulpResult::CompErr(
+        format!("Version inconnue du bytecode ({}.{}.{}).",
+            header.vers_maj, header.vers_min, header.vers_patch)
     )
 } // End of run() function.

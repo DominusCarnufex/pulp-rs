@@ -1,4 +1,5 @@
-use super::super::run;
+use ::run;
+use ::PulpResult;
 
 // Un programme complet utilisant la version 0.1.0 du
 // *bytecode*. Il réalise l’addition de 1 et 2.
@@ -28,9 +29,20 @@ fn run_v0_1_0() {
     ];
 
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
-    };
+        PulpResult::Ok(h)      => {
+            let res = match h.vector::<Option<::v0_1_0::Const>>()   {
+                Ok(mut a)  => {
+                    a.pop().unwrap().unwrap()
+                },
+                Err(e)     => panic!("{}", e)
+            };
+
+            assert_eq!(::v0_1_0::Const::Int(3), res);
+        },
+        PulpResult::ProgErr(_) => panic!("Programme avorté qui \
+                                            n’aurait pas dû"),
+        PulpResult::CompErr(e) => panic!("{}", e)
+    }
 }
 
 // Un programme de seulement 4 octets ne contient pas
@@ -39,9 +51,11 @@ fn run_v0_1_0() {
 #[should_panic(expected = "taille insuffisante")]
 fn too_small()  {
     let vec = vec![0x50, 0x75, 0x4c, 0x50];
+
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
     }
 }
 
@@ -70,9 +84,11 @@ fn bad_md5()    {
           0x0a, 0x01, 0x00,
           0x30
     ];
+
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
     }
 }
 
@@ -103,9 +119,10 @@ fn good_version_v0_1_0()    {
     ];
 
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
-    };
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
+    }
 }
 
 // Pendant du précédent, pour quand la version 0.1.0 du
@@ -135,9 +152,10 @@ fn bad_version_v0_1_0() {
     ];
 
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
-    };
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
+    }
 }
 
 // Un programme complet utilisant la version 0.1.0 du
@@ -168,9 +186,10 @@ fn no_main_v0_1_0() {
     ];
 
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
-    };
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
+    }
 }
 
 // La version 0.0.1 du *bytecode* n’existe pas.
@@ -196,8 +215,10 @@ fn bad_version()    {
           0x0a, 0x01, 0x00,
           0x30
     ];
+
     match run(&vec) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e)
+        PulpResult::Ok(_)      => {},
+        PulpResult::ProgErr(_) => {},
+        PulpResult::CompErr(e) => panic!("{}", e)
     }
 }
