@@ -2,9 +2,10 @@ extern crate alloc;
 
 use ::std;
 
+#[repr(C)]
 pub struct HeapVar  {
     pointer : *mut u8,
-    size : usize
+    size    : usize
 }
 
 impl HeapVar    {
@@ -40,6 +41,22 @@ impl HeapVar    {
         };
 
         unsafe { std::ptr::write(heapvar.pointer as *mut T, seed); }
+        Ok(heapvar)
+    }
+
+    pub fn from_string(string : String) -> Result<Self, String> {
+        let bytes = string.into_bytes();
+        let size  = bytes.len() + 1;
+
+        let heapvar = match HeapVar::new(size)  {
+            Ok(a)  => a,
+            Err(e) => return Err(e)
+        };
+
+        unsafe {
+            std::ptr::copy(bytes.as_ptr(), heapvar.pointer, heapvar.size);
+        }
+
         Ok(heapvar)
     }
 

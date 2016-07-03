@@ -1,8 +1,8 @@
 #![crate_type = "dylib"]
 #![crate_name = "pulp"]
 
-//#![feature(alloc, heap_api, stmt_expr_attributes)]
-#![feature(stmt_expr_attributes)]
+#![feature(alloc, heap_api, stmt_expr_attributes)]
+//#![feature(stmt_expr_attributes)]
 
 mod utils;
 
@@ -12,8 +12,8 @@ use md5::*;
 mod header;
 use header::*;
 
-//mod heapvar;
-//use heapvar::*;
+mod heapvar;
+use heapvar::*;
 
 #[cfg(any(feature = "v0_x", feature = "v0_1_x", feature = "v0_1_0"))]
 pub mod v0_1_0;
@@ -62,3 +62,34 @@ pub fn version(bytecode : &[u8]) -> Result<(u8, u8, u8), String>    {
             header.vers_maj, header.vers_min, header.vers_patch)
     )
 } // End of version() function.
+
+#[no_mangle]
+pub extern fn version_c(entree : HeapVar) -> HeapVar    {
+    let vec = match entree.vector::<u8>()   {
+        Ok(a)  => a,
+        Err(e) => {
+            let string  = format!("Entrée incorrecte : {}", e);
+            let heapvar = match HeapVar::from_string(string)    {
+                Ok(a)  => a,
+                Err(e) => panic!("Panique totale : {}", e)
+            };
+            return heapvar;
+        }
+    };
+
+    let vers = match version(&vec)  {
+        Ok(a)  => a,
+        Err(e) => {
+            let heapvar = match HeapVar::from_string(e) {
+                Ok(a)  => a,
+                Err(e) => panic!("Panique totale : {}", e)
+            };
+            return heapvar;
+        }
+    };
+
+    match HeapVar::from(vers)   {
+        Ok(a)  => return a,
+        Err(e) => panic!("Panique totale : {}", e)
+    }
+} // End of version_c() function.

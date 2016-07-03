@@ -32,6 +32,8 @@ La portion entre crochets doit être répétée autant de fois qu’il y a de ve
 
 ## Exécution
 
+### En Rust
+
 S’agissant d’une bibliothèque, elle n’est pas exécutable directement. Il faudra faire appel tout d’abord à la fonction suivante.
 
 ```rust
@@ -40,7 +42,30 @@ pub fn version(bytecode : &[u8]) -> Result<(u8, u8, u8), String>
 
 Si le *bytecode* fourni en entrée est valide et utilise une version supportée par l’interpréteur tel qu’il est compilé, cette fonction renvoie la version du *bytecode* utilisée sous la forme d’un triplet de `u8`. Pour une version `x.y.z` donnée, il faudra ensuite appeler la fonction `run(bytecode : &[u8])` du module `v<x>_<y>_<z>`. Chacune a sa propre signature de type, car elle ne renvoie pas toujours la même chose.
 
-À l’heure actuelle, il n’existe pas d’interface permettant d’appeler cette fonction depuis un programme en C (ou tout autre langage disposant d’un système de FFI utilisant les conventions d’appel du C), le programme appelant devra nécessairement être en Rust. Cela est amené à changer dans un futur proche.
+### En C, ou autre langage ayant une FFI C
+
+La bibliothèque expose l’équivalent de la fonction `verion()` ci-dessus, accessible depuis une ABI C.
+
+```rust
+pub extern fn version_c(entree : HeapVar) -> HeapVar
+```
+
+Quel est donc ce type HeapVar ? C’est tout simplement un pointeur et une longueur, permettant de faire passer n’importe quel type de donnée vers l’extérieur de la bibliothèque, sans que celles-ci soient désallouées à la fin de l’exécution de la bibliothèque. Voici sa définition en Rust.
+
+```rust
+pub struct HeapVar  {
+    pointer : *mut u8,
+    size    : usize
+}
+```
+
+Le `HeapVar` fourni en entrée doit contenir le *bytecode* complet, sous forme d’un tableau de `u8` (alias `unsigned char` en C).
+
+Le `HeapVar` renvoyé par la fonction `version_c()` peut contenir deux choses. Soit un triplet de `u8`, correspondant aux trois morceaux de la version du *bytecode* (`size` vaut alors 3). Soit un message d’erreur, sous la forme d’une chaîne de caractères *null terminated*, à la C (`size` vaut alors plus que 3).
+
+Une fois obtenu la version, il est alors possible d’appeler la fonction `run_v<x>_<y>_<z>()`, qui prend en entrée le même `HeapVar` que `version_c()`, et renvoie en sortie quelque chose de différent selon la version. Reportez-vous à la définition de chaque fonction.
+
+Notez également que vous trouverez dans le dossier `tests_ffi` des exemples d’utilisation possible en C des fonctions de la bibliothèque.
 
 ## Évolutions futures
 
